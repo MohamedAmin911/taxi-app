@@ -33,11 +33,11 @@ class _SplashViewState extends State<SplashView> {
         alignment: Alignment.center,
         children: [
           Container(
-            color: TColor.lightGray,
+            color: KColor.lightGray,
             width: context.width,
             height: context.height,
             child: Image.asset(
-              TImage.logo,
+              KImage.logo,
               width: context.width * 0.25,
             ),
           )

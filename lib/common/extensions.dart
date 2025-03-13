@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-class TColor {
+class KColor {
   static Color get primary => const Color(0xfffcbd01);
   static Color get secondary => const Color(0xff3369FF);
 
