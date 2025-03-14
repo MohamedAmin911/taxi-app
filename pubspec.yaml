@@ -38,7 +38,8 @@ dependencies:
   flutter_native_splash:
   flutter_screenutil:
   cached_network_image:
-  country_code_picker: ^3.2.0
+  country_code_picker:
+  sms_autofill:
 
 dev_dependencies:
   flutter_test:

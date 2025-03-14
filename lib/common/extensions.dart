@@ -50,4 +50,13 @@ extension AppContext on BuildContext {
   void pop() async {
     return Navigator.pop(this);
   }
+
+  Future pushRlacement(Widget widget) async {
+    return Navigator.pushReplacement(
+      this,
+      MaterialPageRoute(
+        builder: (context) => widget,
+      ),
+    );
+  }
 }

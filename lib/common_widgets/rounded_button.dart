@@ -9,12 +9,13 @@ class RoundButton extends StatelessWidget {
   final String title;
   final RoundButtonType type;
   final VoidCallback onPressed;
-
+  final Color color;
   const RoundButton(
       {super.key,
       required this.title,
       this.type = RoundButtonType.primary,
-      required this.onPressed});
+      required this.onPressed,
+      required this.color});
 
   @override
   Widget build(BuildContext context) {
@@ -22,13 +23,7 @@ class RoundButton extends StatelessWidget {
       onPressed: onPressed,
       minWidth: double.maxFinite,
       elevation: 0,
-      color: type == RoundButtonType.primary
-          ? KColor.primary
-          : type == RoundButtonType.secondary
-              ? KColor.secondary
-              : type == RoundButtonType.red
-                  ? KColor.red
-                  : Colors.transparent,
+      color: color,
       height: 45.h,
       shape: RoundedRectangleBorder(
           side: type == RoundButtonType.boarded

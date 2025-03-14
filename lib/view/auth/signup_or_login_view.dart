@@ -50,6 +50,7 @@ class _SignUpOrLoginViewState extends State<SignUpOrLoginView> {
                   padding:
                       const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
                   child: RoundButton(
+                    color: KColor.primary,
                     title: "Log In",
                     onPressed: () {
                       // context.push( const MobileNumberView() );

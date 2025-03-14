@@ -6,7 +6,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:taxi_app/common/extensions.dart';
 import 'package:taxi_app/common/text_style.dart';
 import 'package:taxi_app/common_widgets/rounded_button.dart';
-import 'package:taxi_app/view/widgets/auth_widgets/number_picker_and_textfield.dart';
+import 'package:taxi_app/view/auth/otp_verification_screen.dart';
 import 'package:taxi_app/view/widgets/auth_widgets/terms_And_conditions.dart';
 
 class EnterMobileNumberView extends StatefulWidget {
@@ -19,8 +19,8 @@ class EnterMobileNumberView extends StatefulWidget {
 class _EnterMobileNumberViewState extends State<EnterMobileNumberView> {
   final _formKey = GlobalKey<FormState>();
   String _countryCode = '+1'; // Default country code
-  final String _phoneNumber = '';
-
+  String _phoneNumber = '';
+  bool isNumberCorrect = false;
   void _onCountryChange(CountryCode countryCode) {
     setState(() {
       _countryCode = countryCode.dialCode!;
@@ -33,6 +33,12 @@ class _EnterMobileNumberViewState extends State<EnterMobileNumberView> {
       String completeNumber = '$_countryCode$_phoneNumber';
       print('Phone number: $completeNumber');
       // Proceed with further logic, e.g., API call
+      setState(() {
+        isNumberCorrect = true;
+      });
+      context.pushRlacement(OtpVerificationView(
+        phoneNumber: completeNumber,
+      ));
     } else {
       print('Invalid phone number');
     }
@@ -68,7 +74,7 @@ class _EnterMobileNumberViewState extends State<EnterMobileNumberView> {
             ),
             SizedBox(height: 29.h),
             //number picker and field
-            phoneNumberPickerAndField(context, _onCountryChange, _phoneNumber),
+            CountryCodePickerAndphoneField(context),
             SizedBox(height: 40.h),
             //terms
             const TermsAndConditions(),
@@ -78,11 +84,79 @@ class _EnterMobileNumberViewState extends State<EnterMobileNumberView> {
               child: SizedBox(
                 width: context.width * 0.9,
                 child: RoundButton(
+                  color: isNumberCorrect ? KColor.primary : KColor.lightGray,
                   onPressed: _submitForm,
                   title: "CONTINUE",
                 ),
               ),
             )
+          ],
+        ),
+      ),
+    );
+  }
+
+  // ignore: non_constant_identifier_names
+  Padding CountryCodePickerAndphoneField(BuildContext context) {
+    return Padding(
+      padding: EdgeInsets.only(left: 24.w),
+      child: SizedBox(
+        width: context.width * 0.85,
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            //country picker
+            CountryCodePicker(
+              onChanged: _onCountryChange,
+              showDropDownButton: false,
+              dialogTextStyle: appStyle(
+                  size: 15,
+                  color: KColor.primaryText,
+                  fontWeight: FontWeight.w400),
+              dialogItemPadding: EdgeInsets.only(left: 20.w),
+              favorite: const ['+20', 'EG'],
+              showCountryOnly: false,
+              showOnlyCountryWhenClosed: false,
+              alignLeft: false,
+              hideSearch: true,
+            ),
+            //phone number field
+            Expanded(
+              child: TextFormField(
+                initialValue: _phoneNumber != "" ? _phoneNumber : "",
+                onChanged: (value) {
+                  setState(() {
+                    value.length == 10
+                        ? isNumberCorrect = true
+                        : isNumberCorrect = false;
+                  });
+                },
+                decoration: InputDecoration(
+                  errorStyle: appStyle(
+                      size: 15, color: KColor.red, fontWeight: FontWeight.w400),
+                  hintText: 'Enter your phone number',
+                  hintStyle: appStyle(
+                      size: 15,
+                      color: KColor.lightGray,
+                      fontWeight: FontWeight.w400),
+                  border: InputBorder.none,
+                  filled: false,
+                ),
+                keyboardType: TextInputType.phone,
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Phone number is required';
+                  } else if (!RegExp(r'^\d{4,14}$').hasMatch(value) ||
+                      value.length != 10) {
+                    return 'Invalid phone number';
+                  }
+                  return null;
+                },
+                onSaved: (value) {
+                  _phoneNumber = value ?? '';
+                },
+              ),
+            ),
           ],
         ),
       ),
