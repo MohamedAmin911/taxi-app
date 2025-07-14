@@ -5,7 +5,8 @@ import 'package:taxi_app/common/extensions.dart';
 import 'package:taxi_app/common/images.dart';
 import 'package:taxi_app/common/text_style.dart';
 import 'package:taxi_app/common_widgets/rounded_button.dart';
-import 'package:taxi_app/view/auth/enter_mobile_number_view.dart';
+import 'package:taxi_app/view/auth/enter_mobile_number_screen.dart';
+import 'package:taxi_app/view/auth/login_screen.dart';
 
 class SignUpOrLoginView extends StatefulWidget {
   const SignUpOrLoginView({super.key});
@@ -51,9 +52,9 @@ class _SignUpOrLoginViewState extends State<SignUpOrLoginView> {
                       const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
                   child: RoundButton(
                     color: KColor.primary,
-                    title: "Log In",
+                    title: "Sign In",
                     onPressed: () {
-                      // context.push( const MobileNumberView() );
+                      context.push(const LogInScreen());
                     },
                   ),
                 ),

@@ -3,7 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:taxi_app/common/extensions.dart';
-import 'package:taxi_app/view/auth/signup_or_login_view.dart';
+import 'package:taxi_app/view/auth/signup_or_login_screen.dart';
 
 void main() async {
   WidgetsBinding widgetsBinding = WidgetsFlutterBinding.ensureInitialized();

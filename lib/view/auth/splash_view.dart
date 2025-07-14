@@ -38,7 +38,7 @@ class _SplashViewState extends State<SplashView> {
             height: context.height,
             child: Image.asset(
               KImage.logo,
-              width: context.width * 0.25,
+              width: context.width * 0.15,
             ),
           )
         ],

@@ -6,7 +6,7 @@ import 'package:sms_autofill/sms_autofill.dart';
 import 'package:taxi_app/common/extensions.dart';
 import 'package:taxi_app/common/text_style.dart';
 import 'package:taxi_app/common_widgets/rounded_button.dart';
-import 'package:taxi_app/view/auth/enter_mobile_number_view.dart';
+import 'package:taxi_app/view/auth/enter_mobile_number_screen.dart';
 
 class OtpVerificationView extends StatefulWidget {
   const OtpVerificationView({super.key, required this.phoneNumber});
@@ -34,7 +34,7 @@ class _OtpVerificationViewState extends State<OtpVerificationView> {
   void _startResendTimer() {
     _timer?.cancel(); // Cancel any existing timer
     _remainingSeconds = 179; // Reset timer to 2:59
-    _timer = Timer.periodic(Duration(seconds: 1), (timer) {
+    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
       if (_remainingSeconds > 0) {
         setState(() {
           _remainingSeconds--;
@@ -70,122 +70,124 @@ class _OtpVerificationViewState extends State<OtpVerificationView> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          //header text
-          Padding(
-            padding: EdgeInsets.only(top: 62.h, left: 24.w),
-            child: Text(
-              "OTP  Verification",
-              style: appStyle(
-                  size: 25,
-                  color: KColor.primaryText,
-                  fontWeight: FontWeight.w800),
+      body: SingleChildScrollView(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            //header text
+            Padding(
+              padding: EdgeInsets.only(top: 62.h, left: 24.w),
+              child: Text(
+                "OTP  Verification",
+                style: appStyle(
+                    size: 25,
+                    color: KColor.primaryText,
+                    fontWeight: FontWeight.w800),
+              ),
             ),
-          ),
-          SizedBox(height: 10.h),
-          //sub text
-          Padding(
-            padding: EdgeInsets.only(left: 24.w),
-            child: Text(
-              "Enter the 4-digit code sent to you at",
-              style: appStyle(
-                  size: 16,
-                  color: KColor.secondaryText,
-                  fontWeight: FontWeight.w500),
+            SizedBox(height: 10.h),
+            //sub text
+            Padding(
+              padding: EdgeInsets.only(left: 24.w),
+              child: Text(
+                "Enter the 4-digit code sent to you at",
+                style: appStyle(
+                    size: 16,
+                    color: KColor.secondaryText,
+                    fontWeight: FontWeight.w500),
+              ),
             ),
-          ),
-          //phone number and edit
-          Padding(
-            padding: EdgeInsets.only(left: 24.w),
-            child: Row(
-              children: [
-                Text(
-                  widget.phoneNumber,
-                  style: appStyle(
-                      size: 16,
-                      color: KColor.primaryText,
-                      fontWeight: FontWeight.w500),
-                ),
-                // SizedBox(width: 18.w),
-                TextButton(
-                  onPressed: () {
-                    context.pushRlacement(const EnterMobileNumberView());
-                  },
-                  child: Text(
-                    "Edit",
+            //phone number and edit
+            Padding(
+              padding: EdgeInsets.only(left: 24.w),
+              child: Row(
+                children: [
+                  Text(
+                    widget.phoneNumber,
                     style: appStyle(
                         size: 16,
-                        color: KColor.primary,
-                        fontWeight: FontWeight.bold),
-                  ),
-                )
-              ],
-            ),
-          ),
-          SizedBox(height: 41.h),
-          //PIN FIELD
-          Padding(
-            padding: EdgeInsets.symmetric(horizontal: 24.h),
-            child: PinFieldAutoFill(
-              controller: _codeController,
-              codeLength: 6, // Adjust based on your verification code length
-              decoration: UnderlineDecoration(
-                textStyle: appStyle(
-                    size: 16,
-                    color: KColor.primaryText,
-                    fontWeight: FontWeight.w500),
-                colorBuilder: FixedColorBuilder(KColor.secondaryText),
-              ),
-              currentCode: _code, // Set this variable to prefill the code
-              onCodeSubmitted: (code) {
-                (code) {
-                  print("OTP Submitted: $code");
-                };
-              },
-              onCodeChanged: (code) {
-                if (code != null && code.length == 6) {
-                  // Handle code change, e.g., enable a button
-                }
-              },
-            ),
-          ),
-          SizedBox(height: 40.h),
-          //BUTTON
-          Center(
-            child: SizedBox(
-              width: context.width * 0.9,
-              child: RoundButton(
-                color: KColor.primary,
-                onPressed: () {},
-                title: "SUBMIT",
-              ),
-            ),
-          ),
-          SizedBox(height: 15.h),
-          //RESEND CODE
-          Center(
-            child: _remainingSeconds > 0
-                ? Text(
-                    "Resend code in ${_formatTime(_remainingSeconds)}",
-                    style: appStyle(
-                        size: 15,
-                        color: KColor.secondaryText,
+                        color: KColor.primaryText,
                         fontWeight: FontWeight.w500),
-                  )
-                : TextButton(
-                    onPressed: _resendCode,
+                  ),
+                  // SizedBox(width: 18.w),
+                  TextButton(
+                    onPressed: () {
+                      context.pushRlacement(const EnterMobileNumberView());
+                    },
                     child: Text(
-                      "RESEND CODE",
+                      "Edit",
                       style: appStyle(
-                          size: 14,
+                          size: 16,
                           color: KColor.primary,
                           fontWeight: FontWeight.bold),
                     ),
-                  ),
-          ),
-        ],
+                  )
+                ],
+              ),
+            ),
+            SizedBox(height: 41.h),
+            //PIN FIELD
+            Padding(
+              padding: EdgeInsets.symmetric(horizontal: 24.h),
+              child: PinFieldAutoFill(
+                controller: _codeController,
+                codeLength: 6, // Adjust based on your verification code length
+                decoration: UnderlineDecoration(
+                  textStyle: appStyle(
+                      size: 16,
+                      color: KColor.primaryText,
+                      fontWeight: FontWeight.w500),
+                  colorBuilder: FixedColorBuilder(KColor.secondaryText),
+                ),
+                currentCode: _code, // Set this variable to prefill the code
+                onCodeSubmitted: (code) {
+                  (code) {
+                    print("OTP Submitted: $code");
+                  };
+                },
+                onCodeChanged: (code) {
+                  if (code != null && code.length == 6) {
+                    // Handle code change, e.g., enable a button
+                  }
+                },
+              ),
+            ),
+            SizedBox(height: 40.h),
+            //BUTTON
+            Center(
+              child: SizedBox(
+                width: context.width * 0.9,
+                child: RoundButton(
+                  color: KColor.primary,
+                  onPressed: () {},
+                  title: "SUBMIT",
+                ),
+              ),
+            ),
+            SizedBox(height: 15.h),
+            //RESEND CODE
+            Center(
+              child: _remainingSeconds > 0
+                  ? Text(
+                      "Resend code in ${_formatTime(_remainingSeconds)}",
+                      style: appStyle(
+                          size: 15,
+                          color: KColor.secondaryText,
+                          fontWeight: FontWeight.w500),
+                    )
+                  : TextButton(
+                      onPressed: _resendCode,
+                      child: Text(
+                        "RESEND CODE",
+                        style: appStyle(
+                            size: 14,
+                            color: KColor.primary,
+                            fontWeight: FontWeight.bold),
+                      ),
+                    ),
+            ),
+          ],
+        ),
       ),
     );
   }
