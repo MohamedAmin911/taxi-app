@@ -40,6 +40,15 @@ dependencies:
   cached_network_image:
   country_code_picker:
   sms_autofill:
+  firebase_auth:
+  firebase_core: 
+  firebase_database:
+  location: null
+  shared_preferences: 
+  geocoding:
+  google_maps_flutter:
+  google_maps_webservice: 
+  flutter_bloc:
 
 dev_dependencies:
   flutter_test:

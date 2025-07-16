@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "651879327595",
+    "project_id": "taxi-app-337b4",
+    "storage_bucket": "taxi-app-337b4.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:651879327595:android:6fef33330f722d97c54e2e",
+        "android_client_info": {
+          "package_name": "com.example.taxi_app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDR8yLp2LhuNNzHZkT0QGarGxpgmhg2cKU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
