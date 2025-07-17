@@ -43,12 +43,17 @@ dependencies:
   firebase_auth:
   firebase_core: 
   firebase_database:
-  location: null
   shared_preferences: 
   geocoding:
   google_maps_flutter:
   google_maps_webservice: 
   flutter_bloc:
+  cloud_firestore:
+  image_picker:
+  firebase_storage:
+  http:
+  geolocator:
+ 
 
 dev_dependencies:
   flutter_test:

@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:taxi_app/bloc/auth/auth_cubit.dart';
+import 'package:taxi_app/bloc/customer/customer_cubit.dart';
 import 'package:taxi_app/common/extensions.dart';
 import 'package:taxi_app/view/auth/signup_or_login_screen.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -26,8 +27,11 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider(
-      create: (context) => AuthCubit(),
+    return MultiBlocProvider(
+      providers: [
+        BlocProvider<AuthCubit>(create: (context) => AuthCubit()),
+        BlocProvider<CustomerCubit>(create: (context) => CustomerCubit()),
+      ],
       child: ScreenUtilInit(
           designSize: Size(MediaQuery.of(context).copyWith().size.width,
               MediaQuery.of(context).copyWith().size.height),
