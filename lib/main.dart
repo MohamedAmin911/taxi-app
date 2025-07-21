@@ -3,8 +3,11 @@ import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:flutter_stripe/flutter_stripe.dart';
 import 'package:taxi_app/bloc/auth/auth_cubit.dart';
 import 'package:taxi_app/bloc/customer/customer_cubit.dart';
+import 'package:taxi_app/bloc/payment/payment_method_cubit.dart';
+import 'package:taxi_app/common/api_keys.dart';
 import 'package:taxi_app/common/extensions.dart';
 import 'package:taxi_app/view/auth/signup_or_login_screen.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -19,6 +22,8 @@ void main() async {
   await Future.delayed(const Duration(seconds: 2));
   FlutterNativeSplash.remove();
   SystemChrome.setEnabledSystemUIMode(SystemUiMode.leanBack);
+  Stripe.publishableKey = KapiKeys.stripePublishableKey;
+  await Stripe.instance.applySettings();
   runApp(const MyApp());
 }
 
@@ -31,6 +36,7 @@ class MyApp extends StatelessWidget {
       providers: [
         BlocProvider<AuthCubit>(create: (context) => AuthCubit()),
         BlocProvider<CustomerCubit>(create: (context) => CustomerCubit()),
+        BlocProvider<PaymentCubit>(create: (context) => PaymentCubit()),
       ],
       child: ScreenUtilInit(
           designSize: Size(MediaQuery.of(context).copyWith().size.width,

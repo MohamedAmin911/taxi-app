@@ -25,7 +25,7 @@ class PhoneNumberInputField extends StatelessWidget {
           CountryCodePicker(
             flagWidth: 30.w,
             pickerStyle: PickerStyle.bottomSheet,
-            padding: EdgeInsets.only(bottom: 0.2.h),
+            padding: EdgeInsets.only(top: 10.h),
             margin: EdgeInsets.only(right: 10.w),
             flagDecoration: BoxDecoration(
               borderRadius: BorderRadius.circular(5.r),
@@ -56,11 +56,16 @@ class PhoneNumberInputField extends StatelessWidget {
           // Phone Number Field
           Expanded(
             child: TextFormField(
+              style: appStyle(
+                size: 17.sp,
+                color: KColor.primaryText,
+                fontWeight: FontWeight.bold,
+              ).copyWith(letterSpacing: 1.sp),
               controller: phoneController,
               cursorColor: KColor.primaryText,
               cursorHeight: 17.h,
               decoration: InputDecoration(
-                helperText: ' ', // This reserves space to prevent layout shift
+                helperText: ' ',
                 errorStyle: appStyle(
                   size: 14,
                   color: KColor.red,
@@ -72,7 +77,34 @@ class PhoneNumberInputField extends StatelessWidget {
                   color: KColor.placeholder,
                   fontWeight: FontWeight.w400,
                 ),
-                border: InputBorder.none,
+                disabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(10.r),
+                  borderSide: BorderSide(
+                    color: KColor.lightGray,
+                    width: 2.w,
+                  ),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(10.r),
+                  borderSide: BorderSide(
+                    color: KColor.primary,
+                    width: 2.w,
+                  ),
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(10.r),
+                  borderSide: BorderSide(
+                    color: KColor.lightGray,
+                    width: 1.w,
+                  ),
+                ),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(10.r),
+                  borderSide: BorderSide(
+                    color: KColor.primary,
+                    width: 1.w,
+                  ),
+                ),
                 filled: false,
               ),
               keyboardType: TextInputType.phone,

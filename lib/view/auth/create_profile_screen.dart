@@ -214,7 +214,7 @@ class _CreateProfileScreenState extends State<CreateProfileScreen> {
                         ))
                       : RoundButton(
                           color: KColor.primary,
-                          title: "REGISTER",
+                          title: "NEXT",
                           onPressed: _submitProfile,
                         ),
                   SizedBox(height: 10.h),
