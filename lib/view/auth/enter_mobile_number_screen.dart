@@ -102,7 +102,7 @@ class _EnterMobileNumberViewState extends State<EnterMobileNumberView> {
                     phoneController: _phoneController,
                     onCountryChanged: _onCountryChange,
                   ),
-                  SizedBox(height: 40.h),
+                  SizedBox(height: 16.h),
                   const TermsAndConditions(),
                   SizedBox(height: 16.h),
                   Padding(
