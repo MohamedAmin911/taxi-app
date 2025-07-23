@@ -174,15 +174,23 @@ class _OtpVerificationViewState extends State<OtpVerificationView>
                 Padding(
                   padding: EdgeInsets.symmetric(horizontal: 24.h),
                   child: PinFieldAutoFill(
+                    cursor: Cursor(
+                        color: KColor.lightGray,
+                        height: 8.h,
+                        enabled: true,
+                        offset: 0.1,
+                        radius: Radius.circular(22.r),
+                        width: 20.w),
                     controller: _codeController,
                     codeLength: 6,
                     decoration: UnderlineDecoration(
+                      lineHeight: 3.h,
                       textStyle: appStyle(
                           size: 20,
-                          color: KColor.primaryText,
-                          fontWeight: FontWeight.w500),
-                      colorBuilder: FixedColorBuilder(
-                          KColor.secondaryText.withOpacity(0.5)),
+                          color: KColor.primary,
+                          fontWeight: FontWeight.bold),
+                      colorBuilder:
+                          FixedColorBuilder(KColor.primary.withOpacity(0.5)),
                       gapSpace: 10.w,
                     ),
                     // onCodeChanged: (code) {

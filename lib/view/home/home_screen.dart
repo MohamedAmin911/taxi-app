@@ -30,11 +30,13 @@ class HomeScreen extends StatelessWidget {
             child: Column(
               children: [
                 RoundButton(
-                    title: "SIGN OUT",
-                    onPressed: () {
-                      context.read<AuthCubit>().signOut();
-                    },
-                    color: KColor.red)
+                  color: KColor.red,
+                  title: 'SIGNOUT',
+                  onPressed: () {
+                    // Trigger the logout action
+                    context.read<AuthCubit>().signOut();
+                  },
+                )
               ],
             ),
           ),
