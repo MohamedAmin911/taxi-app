@@ -73,7 +73,6 @@ class CustomerCubit extends Cubit<CustomerState> {
         email: email,
         profileImageUrl: profileImageUrl,
         homeAddress: homeAddress,
-        password: password,
       );
 
       // 3. Save the customer data to Firestore
@@ -83,6 +82,17 @@ class CustomerCubit extends Cubit<CustomerState> {
     } catch (e) {
       emit(CustomerError(message: "Failed to create profile: $e"));
       print(e);
+    }
+  }
+
+  Future<bool> checkIfUserExists(String uid) async {
+    try {
+      final doc = await _db.collection('customers').doc(uid).get();
+      return doc.exists;
+    } catch (e) {
+      // If there's an error, assume the user doesn't exist to be safe.
+      print("Error checking if user exists: $e");
+      return false;
     }
   }
 

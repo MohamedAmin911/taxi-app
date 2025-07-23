@@ -8,7 +8,6 @@ class CustomerModel {
   final String? email;
   final String? profileImageUrl;
   final String homeAddress;
-  final String password;
   final double rating;
   final int totalRides;
   final String? fcmToken;
@@ -21,7 +20,6 @@ class CustomerModel {
     this.email,
     this.profileImageUrl,
     this.homeAddress = '',
-    this.password = '',
     this.rating = 5.0,
     this.totalRides = 0,
     this.fcmToken,
@@ -37,7 +35,6 @@ class CustomerModel {
       'email': email,
       'profileImageUrl': profileImageUrl,
       'homeAddress': homeAddress,
-      'password': password,
       'rating': rating,
       'totalRides': totalRides,
       'fcmToken': fcmToken,
@@ -54,7 +51,6 @@ class CustomerModel {
       email: map['email'],
       profileImageUrl: map['profileImageUrl'],
       homeAddress: map['homeAddress'] ?? '',
-      password: map['password'] ?? '',
       rating: (map['rating'] as num?)?.toDouble() ?? 5.0,
       totalRides: map['totalRides'] as int? ?? 0,
       fcmToken: map['fcmToken'],

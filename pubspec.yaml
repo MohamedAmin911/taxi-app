@@ -55,7 +55,6 @@ dependencies:
   geolocator:
   flutter_stripe:
   cloud_functions:
- 
 
 dev_dependencies:
   flutter_test:

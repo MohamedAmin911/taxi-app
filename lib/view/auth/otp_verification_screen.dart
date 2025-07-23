@@ -1,3 +1,5 @@
+// ignore_for_file: use_build_context_synchronously
+
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -5,11 +7,13 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:sms_autofill/sms_autofill.dart';
 import 'package:taxi_app/bloc/auth/auth_cubit.dart';
 import 'package:taxi_app/bloc/auth/auth_states.dart';
+import 'package:taxi_app/bloc/customer/customer_cubit.dart';
 import 'package:taxi_app/common/extensions.dart';
 import 'package:taxi_app/common/text_style.dart';
 import 'package:taxi_app/common_widgets/rounded_button.dart';
 import 'package:taxi_app/view/auth/create_profile_screen.dart';
 import 'package:taxi_app/view/auth/enter_mobile_number_screen.dart';
+import 'package:taxi_app/view/home/home_screen.dart';
 
 class OtpVerificationView extends StatefulWidget {
   const OtpVerificationView({super.key, required this.phoneNumber});
@@ -22,31 +26,29 @@ class _OtpVerificationViewState extends State<OtpVerificationView>
     with CodeAutoFill {
   final TextEditingController _codeController = TextEditingController();
   Timer? _timer;
-  // Use a ValueNotifier to update the timer UI without rebuilding the whole screen.
   final ValueNotifier<int> _timerNotifier = ValueNotifier(60);
 
   @override
   void initState() {
     super.initState();
-    listenForCode(); // From CodeAutoFill mixin
+    listenForCode();
     _startResendTimer();
   }
 
   @override
   void dispose() {
-    cancel(); // From CodeAutoFill mixin
+    cancel();
     _codeController.dispose();
     _timer?.cancel();
-    _timerNotifier.dispose(); // Dispose the notifier
+    _timerNotifier.dispose();
     super.dispose();
   }
 
   @override
   void codeUpdated() {
-    // This is called when the code is autofilled.
     setState(() {
       _codeController.text = code ?? '';
-      // Automatically submit when code is autofilled
+
       if (_codeController.text.length == 6) {
         _submitOtp();
       }
@@ -92,20 +94,28 @@ class _OtpVerificationViewState extends State<OtpVerificationView>
   Widget build(BuildContext context) {
     return Scaffold(
       body: BlocConsumer<AuthCubit, AuthState>(
-        listener: (context, state) {
+        listener: (context, state) async {
           if (state is AuthLoggedIn) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text("Success!")),
-            );
-            // Navigate to home screen on successful login
-            context.pushRlacement(const CreateProfileScreen());
+            final customerCubit = context.read<CustomerCubit>();
+            final userExists =
+                await customerCubit.checkIfUserExists(state.user.uid);
+            if (userExists) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text("Welcome back!")),
+              );
+              context.pushRlacement(const HomeScreen());
+            } else {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text("Success!")),
+              );
+              context.pushRlacement(const CreateProfileScreen());
+            }
           } else if (state is AuthError) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
                   content: Text(state.message), backgroundColor: KColor.red),
             );
           } else if (state is AuthCodeSent) {
-            // This happens on a successful resend
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(content: Text("A new code has been sent.")),
             );
@@ -202,7 +212,6 @@ class _OtpVerificationViewState extends State<OtpVerificationView>
                 SizedBox(height: 15.h),
                 // RESEND CODE
                 Center(
-                  // Use a ValueListenableBuilder to only rebuild the timer text
                   child: ValueListenableBuilder<int>(
                     valueListenable: _timerNotifier,
                     builder: (context, remainingSeconds, child) {

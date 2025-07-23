@@ -23,6 +23,8 @@ class AuthLoggedIn extends AuthState {
   AuthLoggedIn({required this.user});
 }
 
+class AuthLoggedOut extends AuthState {}
+
 // An error occurred during the process.
 class AuthError extends AuthState {
   final String message;

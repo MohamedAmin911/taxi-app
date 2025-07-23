@@ -8,16 +8,13 @@ class CustomerInputFields extends StatelessWidget {
     required TextEditingController firstNameController,
     required TextEditingController lastNameController,
     required TextEditingController homeAddressController,
-    required TextEditingController password,
     required TextEditingController email,
   })  : _firstNameController = firstNameController,
         _lastNameController = lastNameController,
-        _password = password,
         _email = email;
 
   final TextEditingController _firstNameController;
   final TextEditingController _lastNameController;
-  final TextEditingController _password;
   final TextEditingController _email;
 
   @override
@@ -44,15 +41,6 @@ class CustomerInputFields extends StatelessWidget {
         ),
         SizedBox(height: 10.h),
 
-        // Password input
-        CustomTxtField1(
-          isObscure: true,
-          controller: _password,
-          hintText: "Password",
-          obscureText: true,
-          keyboardType: TextInputType.visiblePassword,
-          errorText: "Please enter your password",
-        ),
         SizedBox(height: 10.h),
         // Email input
         CustomTxtField1(

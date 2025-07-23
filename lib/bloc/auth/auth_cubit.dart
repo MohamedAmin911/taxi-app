@@ -74,4 +74,14 @@ class AuthCubit extends Cubit<AuthState> {
       emit(AuthError(message: "An unknown error occurred: ${e.toString()}"));
     }
   }
+
+  Future<void> signOut() async {
+    try {
+      await _auth.signOut();
+      emit(AuthLoggedOut()); // Emit the new state on success
+    } catch (e) {
+      // Handle potential sign-out errors, though they are rare
+      emit(AuthError(message: "Failed to sign out: ${e.toString()}"));
+    }
+  }
 }

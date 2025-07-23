@@ -157,7 +157,6 @@ class _CreateProfileScreenState extends State<CreateProfileScreen> {
                       firstNameController: _firstNameController,
                       lastNameController: _lastNameController,
                       homeAddressController: _homeAddressController,
-                      password: _password,
                       email: _email),
                   SizedBox(height: 10.h),
                   if (_fetchedHomeAddress != null)
