@@ -55,6 +55,9 @@ dependencies:
   geolocator:
   flutter_stripe:
   cloud_functions:
+  flutter_polyline_points:
+  equatable:
+  dio:
 
 dev_dependencies:
   flutter_test:

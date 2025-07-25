@@ -1,33 +1,56 @@
+import 'package:equatable/equatable.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 
-abstract class HomeState {
+// Base class for all home states
+abstract class HomeState extends Equatable {
   const HomeState();
 
   @override
-  List<Object> get props => [];
+  List<Object?> get props => [];
 }
 
-/// The initial state before anything has loaded.
+// Initial state before anything has loaded
 class HomeInitial extends HomeState {}
 
-/// State while the map is loading or location is being fetched.
+// State for when the cubit is fetching location or route data
 class HomeLoading extends HomeState {}
 
-/// The main state when the map is ready to be displayed.
+// State when the map is ready, showing the user's current location as the pickup point
 class HomeMapReady extends HomeState {
-  final LatLng currentUserPosition;
+  final LatLng currentPosition;
+  final String currentAddress;
   final Set<Marker> markers;
 
   const HomeMapReady({
-    required this.currentUserPosition,
-    this.markers = const {},
+    required this.currentPosition,
+    required this.currentAddress,
+    required this.markers,
   });
 
   @override
-  List<Object> get props => [currentUserPosition, markers];
+  List<Object?> get props => [currentPosition, currentAddress, markers];
 }
 
-/// State for when an error occurs (e.g., location permission denied).
+// State after a destination has been selected and a route is displayed
+class HomeRouteReady extends HomeState {
+  final String pickupAddress;
+  final String destinationAddress;
+  final Set<Marker> markers;
+  final Set<Polyline> polylines;
+
+  const HomeRouteReady({
+    required this.pickupAddress,
+    required this.destinationAddress,
+    required this.markers,
+    required this.polylines,
+  });
+
+  @override
+  List<Object?> get props =>
+      [pickupAddress, destinationAddress, markers, polylines];
+}
+
+// State for handling any errors
 class HomeError extends HomeState {
   final String message;
 

@@ -1,220 +1,322 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:taxi_app/bloc/auth/auth_cubit.dart';
 import 'package:taxi_app/bloc/home/home_cubit.dart';
 import 'package:taxi_app/bloc/home/home_states.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:taxi_app/common/extensions.dart';
+import 'package:taxi_app/common/text_style.dart';
+import 'package:taxi_app/view/home/destination_search_screen.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
 
+  // This function handles the navigation to the search screen
+  Future<void> _navigateToSearch(
+      BuildContext context, HomeMapReady state) async {
+    // Navigate and wait for a result
+    final result = await Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) =>
+            DestinationSearchScreen(currentUserPosition: state.currentPosition),
+      ),
+    );
+
+    // If the user selects a place, the result will be a Map
+    if (result != null && result is Map) {
+      final destination = result['location'] as LatLng;
+      final address = result['address'] as String;
+      // Tell the cubit to plan the route
+      context.read<HomeCubit>().planRoute(destination, address);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create: (context) => HomeCubit()..loadMap(),
+      create: (context) => HomeCubit()..loadCurrentUserLocation(),
       child: Scaffold(
         drawer: _buildAppDrawer(),
-        body: Builder(builder: (context) {
-          return BlocBuilder<HomeCubit, HomeState>(
-            builder: (context, state) {
-              return Stack(
-                children: [
-                  // --- Google Map ---
-                  GoogleMap(
-                    initialCameraPosition: const CameraPosition(
-                      // Default location, e.g., Cairo
-                      target: LatLng(30.0444, 31.2357),
-                      zoom: 12,
-                    ),
-                    myLocationEnabled: true,
-                    myLocationButtonEnabled: true,
-                    onMapCreated: (controller) {
-                      context.read<HomeCubit>().onMapCreated(controller);
-                    },
-                    markers: state is HomeMapReady ? state.markers : {},
-                  ),
-
-                  // --- Loading Indicator ---
-                  if (state is HomeLoading)
-                    const Center(
-                      child: CircularProgressIndicator(),
-                    ),
-
-                  // --- Error Message ---
-                  if (state is HomeError)
-                    Center(
-                      child: Container(
-                        padding: const EdgeInsets.all(20),
-                        color: Colors.black.withOpacity(0.7),
-                        child: Text(
-                          state.message,
-                          style: const TextStyle(color: Colors.white),
-                          textAlign: TextAlign.center,
-                        ),
-                      ),
-                    ),
-
-                  // --- UI Elements on Top of the Map ---
-
-                  // --- Top Bar with Menu Icon ---
-                  SafeArea(
-                    child: Padding(
-                      padding: const EdgeInsets.all(16.0),
-                      child: Row(
-                        children: [
-                          Container(
-                            decoration: const BoxDecoration(
-                              color: Colors.white,
-                              shape: BoxShape.circle,
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.black26,
-                                  blurRadius: 5,
-                                  spreadRadius: 1,
-                                )
-                              ],
-                            ),
-                            child: IconButton(
-                              icon: const Icon(Icons.menu),
-                              onPressed: () {
-                                // Open Drawer
-                                Scaffold.of(context).openDrawer();
-                              },
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-
-                  // --- "Where to?" Panel at the Bottom ---
-                  Positioned(
-                    left: 0,
-                    right: 0,
-                    bottom: 0,
-                    child: _buildWhereToPanel(),
-                  ),
-                ],
-              );
-            },
-          );
-        }),
-      ),
-    );
-  }
-
-  Widget _buildWhereToPanel() {
-    return Card(
-      margin: const EdgeInsets.all(16),
-      elevation: 8,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            // Placeholder for the destination search bar
-            InkWell(
-              onTap: () {
-                // TODO: Navigate to search screen
-              },
-              child: Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: Colors.grey[200],
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: const Row(
+        body: Builder(
+          builder: (context) {
+            return BlocBuilder<HomeCubit, HomeState>(
+              builder: (context, state) {
+                return Stack(
                   children: [
-                    Icon(Icons.search, color: Colors.black54),
-                    SizedBox(width: 12),
-                    Text(
-                      "Where to?",
-                      style: TextStyle(fontSize: 18, color: Colors.black54),
-                    ),
+                    // --- Google Map ---
+                    _buildGoogleMap(context, state),
+
+                    // --- Loading or Error UI ---
+                    if (state is HomeLoading)
+                      const Center(child: CircularProgressIndicator()),
+                    if (state is HomeError) Center(child: Text(state.message)),
+
+                    // --- Top UI (Menu button) ---
+                    _buildTopUI(context),
+
+                    // --- Bottom Panel ---
+                    _buildBottomPanel(context, state),
                   ],
-                ),
-              ),
-            ),
-            const SizedBox(height: 16),
-            // Placeholder for saved locations
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                _buildSavedLocationButton(Icons.home, "Home"),
-                _buildSavedLocationButton(Icons.work, "Work"),
-              ],
-            )
-          ],
+                );
+              },
+            );
+          },
         ),
       ),
     );
   }
 
-  Widget _buildSavedLocationButton(IconData icon, String label) {
-    return InkWell(
-      onTap: () {
-        // TODO: Handle saved location tap
-      },
-      child: Row(
-        children: [
-          Icon(icon, color: Colors.blue),
-          const SizedBox(width: 8),
-          Text(label, style: const TextStyle(fontSize: 16)),
-        ],
+  // Builds the Google Map widget based on the current state
+  Widget _buildGoogleMap(BuildContext context, HomeState state) {
+    Set<Marker> markers = {};
+    Set<Polyline> polylines = {};
+
+    if (state is HomeMapReady) {
+      markers = state.markers;
+    } else if (state is HomeRouteReady) {
+      markers = state.markers;
+      polylines = state.polylines;
+    }
+
+    return GoogleMap(
+      zoomControlsEnabled: false,
+      initialCameraPosition:
+          const CameraPosition(target: LatLng(30.0444, 31.2357), zoom: 12),
+      onMapCreated: (controller) =>
+          context.read<HomeCubit>().setMapController(controller),
+      markers: markers,
+      polylines: polylines,
+      myLocationEnabled: true,
+      myLocationButtonEnabled: false,
+    );
+  }
+
+  // Decides which bottom panel to show based on the state
+  Widget _buildBottomPanel(BuildContext context, HomeState state) {
+    if (state is HomeMapReady) {
+      return _buildSearchPanel(context, state);
+    }
+    if (state is HomeRouteReady) {
+      return _buildConfirmationPanel(context, state);
+    }
+    return const SizedBox
+        .shrink(); // Return empty space for initial/loading states
+  }
+
+  Widget _buildSearchPanel(BuildContext context, HomeMapReady state) {
+    return Positioned(
+      left: 0,
+      right: 0,
+      bottom: 0,
+      child: Card(
+        elevation: 8,
+        color: KColor.bg,
+        margin: EdgeInsets.all(15.w),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(22.r),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: IntrinsicHeight(
+            child: Row(
+              children: [
+                Padding(
+                  padding: EdgeInsets.only(top: 15.h, bottom: 8.h),
+                  child: Column(
+                    children: [
+                      Icon(Icons.circle, color: KColor.primary, size: 20.sp),
+                      Expanded(
+                          child: Container(
+                        width: 2.w,
+                        decoration: BoxDecoration(
+                          color: KColor.primary,
+                          borderRadius: BorderRadius.circular(22.r),
+                        ),
+                      )),
+                      Icon(Icons.location_on,
+                          color: KColor.primary, size: 30.sp),
+                    ],
+                  ),
+                ),
+                SizedBox(width: 16.w),
+                Expanded(
+                  child: Column(
+                    children: [
+                      _buildLocationField(
+                        text: state.currentAddress,
+                        onTap: () {},
+                      ),
+                      SizedBox(height: 12.h),
+                      _buildLocationField(
+                        text: "Where to?",
+                        isHint: true,
+                        onTap: () => _navigateToSearch(context, state),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
       ),
     );
   }
 
+  // Panel to show after a route has been selected, styled consistently.
+  Widget _buildConfirmationPanel(BuildContext context, HomeRouteReady state) {
+    return Positioned(
+      left: 0,
+      right: 0,
+      bottom: 0,
+      child: Card(
+        margin: EdgeInsets.all(15.w),
+        elevation: 8,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(22.r),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Use IntrinsicHeight to make the connector line expand
+              IntrinsicHeight(
+                child: Row(
+                  children: [
+                    // Visual connector
+                    Column(
+                      children: [
+                        Icon(Icons.circle, color: KColor.primary, size: 20.sp),
+                        Expanded(
+                            child:
+                                Container(width: 1.w, color: KColor.primary)),
+                        Icon(Icons.location_on,
+                            color: KColor.primary, size: 30.sp),
+                      ],
+                    ),
+                    SizedBox(width: 16.w),
+                    Expanded(
+                      child: Column(
+                        children: [
+                          _buildLocationField(
+                              text: state.pickupAddress, onTap: () {}),
+                          SizedBox(height: 12.h),
+                          _buildLocationField(
+                              text: state.destinationAddress, onTap: () {}),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              SizedBox(height: 16.h),
+              ElevatedButton(
+                onPressed: () {/* TODO: Implement ride confirmation logic */},
+                child: const Text("Confirm Ride"),
+              )
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  // Helper widget to create the styled location input fields.
+  Widget _buildLocationField({
+    required String text,
+    bool isHint = false,
+    required VoidCallback onTap,
+  }) {
+    // Use a controller to set the text
+    final controller = TextEditingController(text: text);
+
+    // A TextField gives us perfect alignment and scrolling for free
+    return TextField(
+      controller: controller,
+      readOnly: true, // This makes the field uneditable
+      onTap: onTap, // This makes the whole field tappable
+      decoration: InputDecoration(
+        filled: true,
+        fillColor: Colors.grey[200], // Or your KColor.bg
+        // Remove the border to make it look like a container
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(22.r),
+          borderSide: BorderSide.none,
+        ),
+        // Adjust padding as needed
+        contentPadding:
+            const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        hintText: isHint ? text : null,
+        hintStyle: appStyle(
+          size: 16.sp,
+          color: KColor.placeholder,
+          fontWeight: FontWeight.w500,
+        ),
+      ),
+      style: appStyle(
+        size: 16.sp,
+        color: isHint ? KColor.placeholder : KColor.primaryText,
+        fontWeight: FontWeight.w500,
+      ),
+    );
+  }
+
+  // Builds the floating menu button
+  Widget _buildTopUI(BuildContext context) {
+    return SafeArea(
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Container(
+          decoration: BoxDecoration(
+            color: KColor.primary,
+            shape: BoxShape.circle,
+            boxShadow: const [
+              BoxShadow(color: Colors.black26, blurRadius: 5, spreadRadius: 1)
+            ],
+          ),
+          child: IconButton(
+            icon: const Icon(Icons.menu),
+            onPressed: () => Scaffold.of(context).openDrawer(),
+          ),
+        ),
+      ),
+    );
+  }
+
+  // Builds the side navigation drawer
   Widget _buildAppDrawer() {
-    // A Builder is used here to ensure the context has a Scaffold ancestor
     return Builder(builder: (context) {
       return Drawer(
         child: ListView(
           padding: EdgeInsets.zero,
           children: <Widget>[
-            const DrawerHeader(
-              decoration: BoxDecoration(
-                color: Colors.blue,
-              ),
-              child: Text(
-                'Taxi App',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 24,
-                ),
-              ),
+            DrawerHeader(
+              decoration: BoxDecoration(color: KColor.primary),
+              child: const Text('Taxi App',
+                  style: TextStyle(color: Colors.white, fontSize: 24)),
             ),
             ListTile(
               leading: const Icon(Icons.person),
               title: const Text('Profile'),
-              onTap: () {
-                // TODO: Navigate to Profile Screen
-              },
+              onTap: () {},
             ),
             ListTile(
               leading: const Icon(Icons.payment),
               title: const Text('Payment'),
-              onTap: () {
-                // TODO: Navigate to Payment Screen
-              },
+              onTap: () {},
             ),
             ListTile(
               leading: const Icon(Icons.history),
               title: const Text('Ride History'),
-              onTap: () {
-                // TODO: Navigate to Ride History Screen
-              },
+              onTap: () {},
             ),
             const Divider(),
             ListTile(
               leading: const Icon(Icons.logout),
               title: const Text('Sign Out'),
-              onTap: () {
-                // Call the signOut method from the AuthCubit
-                context.read<AuthCubit>().signOut();
-              },
+              onTap: () => context.read<AuthCubit>().signOut(),
             ),
           ],
         ),
