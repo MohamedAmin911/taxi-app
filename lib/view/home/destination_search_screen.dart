@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:google_maps_webservice/places.dart';
-import 'package:taxi_app/common/api_keys.dart';
 
+import 'package:taxi_app/common/api_keys.dart';
 import 'package:uuid/uuid.dart';
 
 class DestinationSearchScreen extends StatefulWidget {
@@ -39,8 +39,23 @@ class _DestinationSearchScreenState extends State<DestinationSearchScreen> {
       ], // Strongly prefer results in Egypt
     );
 
-    if (mounted && response.isOkay) {
-      setState(() => _predictions = response.predictions);
+    if (mounted) {
+      if (response.isOkay) {
+        setState(() => _predictions = response.predictions);
+      } else {
+        // --- ADDED: Error Handling ---
+        // This will print the error from Google if something is wrong
+        // with your API key or setup, and show a message to the user.
+        print("Places API Error: ${response.errorMessage}");
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content:
+                Text(response.errorMessage ?? "An unknown error occurred."),
+            backgroundColor: Colors.red,
+          ),
+        );
+        setState(() => _predictions = []);
+      }
     }
   }
 
@@ -59,7 +74,18 @@ class _DestinationSearchScreenState extends State<DestinationSearchScreen> {
         };
         Navigator.of(context).pop(result);
       }
+    } else if (mounted) {
+      // --- ADDED: Error Handling ---
+      print("Place Details API Error: ${response.errorMessage}");
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content:
+              Text(response.errorMessage ?? "Could not get place details."),
+          backgroundColor: Colors.red,
+        ),
+      );
     }
+
     // A session token is used for one search session and must be regenerated.
     setState(() => _sessionToken = const Uuid().v4());
   }
@@ -96,12 +122,16 @@ class _DestinationSearchScreenState extends State<DestinationSearchScreen> {
               itemBuilder: (context, index) {
                 final prediction = _predictions[index];
                 return ListTile(
-                  leading: const Icon(Icons.location_on_outlined),
-                  title: Text(prediction.structuredFormatting?.mainText ?? ''),
-                  subtitle: Text(
-                      prediction.structuredFormatting?.secondaryText ?? ''),
-                  onTap: () => _onPlaceSelected(prediction.placeId!),
-                );
+                    leading: const Icon(Icons.location_on_outlined),
+                    title:
+                        Text(prediction.structuredFormatting?.mainText ?? ''),
+                    subtitle: Text(
+                        prediction.structuredFormatting?.secondaryText ?? ''),
+                    onTap: () {
+                      if (prediction.placeId != null) {
+                        _onPlaceSelected(prediction.placeId!);
+                      }
+                    });
               },
             ),
           ),

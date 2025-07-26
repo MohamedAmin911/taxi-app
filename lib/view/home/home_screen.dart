@@ -87,7 +87,7 @@ class HomeScreen extends StatelessWidget {
           context.read<HomeCubit>().setMapController(controller),
       markers: markers,
       polylines: polylines,
-      myLocationEnabled: true,
+      myLocationEnabled: false,
       myLocationButtonEnabled: false,
     );
   }
@@ -186,15 +186,19 @@ class HomeScreen extends StatelessWidget {
                 child: Row(
                   children: [
                     // Visual connector
-                    Column(
-                      children: [
-                        Icon(Icons.circle, color: KColor.primary, size: 20.sp),
-                        Expanded(
-                            child:
-                                Container(width: 1.w, color: KColor.primary)),
-                        Icon(Icons.location_on,
-                            color: KColor.primary, size: 30.sp),
-                      ],
+                    Padding(
+                      padding: EdgeInsets.only(top: 15.h, bottom: 8.h),
+                      child: Column(
+                        children: [
+                          Icon(Icons.circle,
+                              color: KColor.primary, size: 20.sp),
+                          Expanded(
+                              child:
+                                  Container(width: 1.w, color: KColor.primary)),
+                          Icon(Icons.location_on,
+                              color: KColor.primary, size: 30.sp),
+                        ],
+                      ),
                     ),
                     SizedBox(width: 16.w),
                     Expanded(
