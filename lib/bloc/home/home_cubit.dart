@@ -1,20 +1,19 @@
+import 'dart:ui' as ui;
+
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:flutter_polyline_points/flutter_polyline_points.dart';
 import 'package:geocoding/geocoding.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:taxi_app/bloc/home/home_states.dart';
-import 'package:taxi_app/common/api_keys.dart';
+import 'package:taxi_app/common/extensions.dart';
 
 class HomeCubit extends Cubit<HomeState> {
   HomeCubit() : super(HomeInitial());
-
+  final Dio _dio = Dio();
   GoogleMapController? _mapController;
   Position? _currentUserPosition;
-
-  // IMPORTANT: Replace with your Google Maps API Key
-  final String _googleApiKey = KapiKeys.googeleMapsApiKey;
 
   void setMapController(GoogleMapController controller) {
     _mapController = controller;
@@ -28,48 +27,78 @@ class HomeCubit extends Cubit<HomeState> {
           _currentUserPosition!.latitude, _currentUserPosition!.longitude);
       final address = await _getAddressFromLatLng(userLatLng);
 
-      final pickupMarker = Marker(
-        markerId: const MarkerId('currentLocation'),
-        position: userLatLng,
-        icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueAzure),
-      );
+      // final BitmapDescriptor pickupIcon = await _bitmapDescriptorFromIconData(
+      //   Icons.circle,
+      //   KColor.primary,
+      //   80, // Size of the icon
+      // );
 
+      // final pickupMarker = Marker(
+      //   markerId: const MarkerId('currentLocation'),
+      //   position: userLatLng,
+      //   icon: pickupIcon,
+      // );
       _mapController?.animateCamera(CameraUpdate.newLatLngZoom(userLatLng, 15));
 
       emit(HomeMapReady(
         currentPosition: userLatLng,
         currentAddress: address,
-        markers: {pickupMarker},
+        // markers: {pickupMarker},
       ));
     } catch (e) {
       emit(HomeError(message: "Failed to get location: ${e.toString()}"));
     }
   }
 
+  // --- THIS FUNCTION IS REWRITTEN FOR OSRM ---
   Future<void> planRoute(LatLng destination, String destinationAddress) async {
     final startState = state;
-    if (startState is! HomeMapReady || _currentUserPosition == null) return;
+    // THE FIX: Allow planning a new route if the map is ready OR if a route already exists.
+    if ((startState is! HomeMapReady && startState is! HomeRouteReady) ||
+        _currentUserPosition == null) {
+      return;
+    }
 
     try {
       emit(HomeLoading());
 
       final pickupLatLng = LatLng(
           _currentUserPosition!.latitude, _currentUserPosition!.longitude);
-      final pickupAddress = startState.currentAddress;
 
-      final polylinePoints =
-          await _getPolylinePoints(pickupLatLng, destination);
+      // Get the original pickup address from the correct state
+      String pickupAddress = "";
+      if (startState is HomeMapReady) {
+        pickupAddress = startState.currentAddress;
+      } else if (startState is HomeRouteReady) {
+        pickupAddress = startState.pickupAddress;
+      }
+
+      // 1. Call the OSRM API
+      final polylinePoints = await _getRouteFromOSRM(pickupLatLng, destination);
+
+      if (polylinePoints.isEmpty) {
+        throw Exception("Could not find a route.");
+      }
+
       final routePolyline = Polyline(
         polylineId: const PolylineId('route'),
-        color: Colors.blue,
+        color: KColor.primary,
         points: polylinePoints,
         width: 5,
       );
+      // final BitmapDescriptor pickupIcon =
+      //     await _bitmapDescriptorFromIconData(Icons.circle, KColor.primary, 80);
+      final BitmapDescriptor destIcon = await _bitmapDescriptorFromIconData(
+          Icons.location_on, KColor.primary, 120);
 
-      final pickupMarker =
-          Marker(markerId: const MarkerId('pickup'), position: pickupLatLng);
+      // final pickupMarker = Marker(
+      //     markerId: const MarkerId('pickup'),
+      //     position: pickupLatLng,
+      //     icon: pickupIcon);
       final destMarker = Marker(
-          markerId: const MarkerId('destination'), position: destination);
+          markerId: const MarkerId('destination'),
+          position: destination,
+          icon: destIcon);
 
       _mapController?.animateCamera(
         CameraUpdate.newLatLngBounds(
@@ -79,9 +108,13 @@ class HomeCubit extends Cubit<HomeState> {
       );
 
       emit(HomeRouteReady(
+        pickupPosition: pickupLatLng,
         pickupAddress: pickupAddress,
         destinationAddress: destinationAddress,
-        markers: {pickupMarker, destMarker},
+        markers: {
+          // pickupMarker,
+          destMarker,
+        },
         polylines: {routePolyline},
       ));
     } catch (e) {
@@ -89,16 +122,85 @@ class HomeCubit extends Cubit<HomeState> {
     }
   }
 
-  Future<List<LatLng>> _getPolylinePoints(LatLng start, LatLng end) async {
-    final polylinePoints = PolylinePoints();
-    final result = await polylinePoints.getRouteBetweenCoordinates(
-      _googleApiKey,
-      PointLatLng(start.latitude, start.longitude),
-      PointLatLng(end.latitude, end.longitude),
+// --- NEW HELPER FUNCTION TO CREATE MARKERS FROM ICONS ---
+  Future<BitmapDescriptor> _bitmapDescriptorFromIconData(
+      IconData iconData, Color color, double size) async {
+    final ui.PictureRecorder pictureRecorder = ui.PictureRecorder();
+    final Canvas canvas = Canvas(pictureRecorder);
+    // final Paint paint = Paint()..color = color;
+    final TextPainter textPainter =
+        TextPainter(textDirection: TextDirection.ltr);
+    final iconStr = String.fromCharCode(iconData.codePoint);
+
+    textPainter.text = TextSpan(
+      text: iconStr,
+      style: TextStyle(
+        letterSpacing: 0.0,
+        fontSize: size,
+        fontFamily: iconData.fontFamily,
+        color: color,
+      ),
     );
-    return result.points
-        .map((point) => LatLng(point.latitude, point.longitude))
-        .toList();
+    textPainter.layout();
+    textPainter.paint(canvas, const Offset(0.0, 0.0));
+
+    final picture = pictureRecorder.endRecording();
+    final image = await picture.toImage(
+        textPainter.width.toInt(), textPainter.height.toInt());
+    final bytes = await image.toByteData(format: ui.ImageByteFormat.png);
+
+    return BitmapDescriptor.fromBytes(bytes!.buffer.asUint8List());
+  }
+
+  // --- NEW FUNCTION TO GET ROUTE FROM OSRM ---
+  Future<List<LatLng>> _getRouteFromOSRM(LatLng start, LatLng end) async {
+    // OSRM API endpoint for driving directions
+    final url =
+        'http://router.project-osrm.org/route/v1/driving/${start.longitude},${start.latitude};${end.longitude},${end.latitude}?overview=full&geometries=polyline';
+
+    try {
+      final response = await _dio.get(url);
+      if (response.statusCode == 200) {
+        final data = response.data;
+        final geometry = data['routes'][0]['geometry'] as String;
+        // The geometry is an encoded polyline, we need to decode it
+        return _decodePolyline(geometry);
+      }
+    } catch (e) {
+      print("Error getting route from OSRM: $e");
+    }
+    return [];
+  }
+
+  // --- HELPER FUNCTION TO DECODE OSRM's POLYLINE ---
+  List<LatLng> _decodePolyline(String encoded) {
+    List<LatLng> points = [];
+    int index = 0, len = encoded.length;
+    int lat = 0, lng = 0;
+
+    while (index < len) {
+      int b, shift = 0, result = 0;
+      do {
+        b = encoded.codeUnitAt(index++) - 63;
+        result |= (b & 0x1f) << shift;
+        shift += 5;
+      } while (b >= 0x20);
+      int dlat = ((result & 1) != 0 ? ~(result >> 1) : (result >> 1));
+      lat += dlat;
+
+      shift = 0;
+      result = 0;
+      do {
+        b = encoded.codeUnitAt(index++) - 63;
+        result |= (b & 0x1f) << shift;
+        shift += 5;
+      } while (b >= 0x20);
+      int dlng = ((result & 1) != 0 ? ~(result >> 1) : (result >> 1));
+      lng += dlng;
+
+      points.add(LatLng((lat / 1E5), (lng / 1E5)));
+    }
+    return points;
   }
 
   LatLngBounds _boundsFromLatLngList(List<LatLng> list) {
@@ -118,14 +220,12 @@ class HomeCubit extends Cubit<HomeState> {
         northeast: LatLng(x1!, y1!), southwest: LatLng(x0!, y0!));
   }
 
-  /// Converts GPS coordinates into a clean, human-readable address string.
   Future<String> _getAddressFromLatLng(LatLng position) async {
     try {
       List<Placemark> placemarks = await placemarkFromCoordinates(
         position.latitude,
         position.longitude,
       );
-
       if (placemarks.isNotEmpty) {
         final Placemark place = placemarks.first;
         if (place.street != null &&
@@ -133,24 +233,14 @@ class HomeCubit extends Cubit<HomeState> {
             !place.street!.contains('+')) {
           return "${place.street}, ${place.locality}";
         }
-        if (place.subLocality != null && place.subLocality!.isNotEmpty) {
-          return "${place.subLocality}, ${place.locality}";
-        }
-        if (place.locality != null && place.locality!.isNotEmpty) {
-          return place.locality!;
-        }
-        if (place.name != null && place.name!.isNotEmpty) {
-          return place.name!;
-        }
+        return "${place.subLocality}, ${place.locality}";
       }
-      return "Unnamed Location";
+      return "Unknown Location";
     } catch (e) {
-      print("Error getting address: $e");
       return "Could not fetch address.";
     }
   }
 
-  /// Determines the current position of the device by requesting permissions.
   Future<Position> _determinePosition() async {
     bool serviceEnabled;
     LocationPermission permission;
@@ -169,8 +259,7 @@ class HomeCubit extends Cubit<HomeState> {
     }
 
     if (permission == LocationPermission.deniedForever) {
-      return Future.error(
-          'Location permissions are permanently denied, we cannot request permissions.');
+      return Future.error('Location permissions are permanently denied.');
     }
 
     return await Geolocator.getCurrentPosition();

@@ -7,27 +7,23 @@ import 'package:taxi_app/bloc/home/home_states.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:taxi_app/common/extensions.dart';
 import 'package:taxi_app/common/text_style.dart';
+import 'package:taxi_app/common_widgets/rounded_button.dart';
 import 'package:taxi_app/view/home/destination_search_screen.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
 
   // This function handles the navigation to the search screen
-  Future<void> _navigateToSearch(
-      BuildContext context, HomeMapReady state) async {
-    // Navigate and wait for a result
+  Future<void> _navigateToSearch(BuildContext context, LatLng position) async {
     final result = await Navigator.of(context).push(
       MaterialPageRoute(
-        builder: (_) =>
-            DestinationSearchScreen(currentUserPosition: state.currentPosition),
+        builder: (_) => DestinationSearchScreen(currentUserPosition: position),
       ),
     );
 
-    // If the user selects a place, the result will be a Map
     if (result != null && result is Map) {
       final destination = result['location'] as LatLng;
       final address = result['address'] as String;
-      // Tell the cubit to plan the route
       context.read<HomeCubit>().planRoute(destination, address);
     }
   }
@@ -73,13 +69,15 @@ class HomeScreen extends StatelessWidget {
     Set<Polyline> polylines = {};
 
     if (state is HomeMapReady) {
-      markers = state.markers;
+      // markers = state.markers;
     } else if (state is HomeRouteReady) {
       markers = state.markers;
       polylines = state.polylines;
     }
 
     return GoogleMap(
+      buildingsEnabled: false,
+      compassEnabled: false,
       zoomControlsEnabled: false,
       initialCameraPosition:
           const CameraPosition(target: LatLng(30.0444, 31.2357), zoom: 12),
@@ -87,7 +85,7 @@ class HomeScreen extends StatelessWidget {
           context.read<HomeCubit>().setMapController(controller),
       markers: markers,
       polylines: polylines,
-      myLocationEnabled: false,
+      myLocationEnabled: true,
       myLocationButtonEnabled: false,
     );
   }
@@ -151,7 +149,8 @@ class HomeScreen extends StatelessWidget {
                       _buildLocationField(
                         text: "Where to?",
                         isHint: true,
-                        onTap: () => _navigateToSearch(context, state),
+                        onTap: () =>
+                            _navigateToSearch(context, state.currentPosition),
                       ),
                     ],
                   ),
@@ -181,7 +180,17 @@ class HomeScreen extends StatelessWidget {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              // Use IntrinsicHeight to make the connector line expand
+              // Top indicator line
+              Container(
+                width: 40.w,
+                height: 4.h,
+                decoration: BoxDecoration(
+                  color: KColor.primary,
+                  borderRadius: BorderRadius.circular(22.r),
+                ),
+              ),
+              SizedBox(height: 16.h),
+              // Location fields with visual connector
               IntrinsicHeight(
                 child: Row(
                   children: [
@@ -208,7 +217,10 @@ class HomeScreen extends StatelessWidget {
                               text: state.pickupAddress, onTap: () {}),
                           SizedBox(height: 12.h),
                           _buildLocationField(
-                              text: state.destinationAddress, onTap: () {}),
+                            text: state.destinationAddress,
+                            onTap: () => _navigateToSearch(
+                                context, state.pickupPosition),
+                          ),
                         ],
                       ),
                     ),
@@ -216,9 +228,11 @@ class HomeScreen extends StatelessWidget {
                 ),
               ),
               SizedBox(height: 16.h),
-              ElevatedButton(
-                onPressed: () {/* TODO: Implement ride confirmation logic */},
-                child: const Text("Confirm Ride"),
+              // Confirm Ride button
+              RoundButton(
+                title: "Confirm Ride",
+                onPressed: () {},
+                color: KColor.primary,
               )
             ],
           ),
@@ -238,6 +252,8 @@ class HomeScreen extends StatelessWidget {
 
     // A TextField gives us perfect alignment and scrolling for free
     return TextField(
+      maxLines: 1,
+      textAlign: TextAlign.left,
       controller: controller,
       readOnly: true, // This makes the field uneditable
       onTap: onTap, // This makes the whole field tappable

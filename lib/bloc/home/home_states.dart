@@ -19,26 +19,31 @@ class HomeLoading extends HomeState {}
 class HomeMapReady extends HomeState {
   final LatLng currentPosition;
   final String currentAddress;
-  final Set<Marker> markers;
+  // final Set<Marker> markers;
 
   const HomeMapReady({
     required this.currentPosition,
     required this.currentAddress,
-    required this.markers,
+    // required this.markers,
   });
 
   @override
-  List<Object?> get props => [currentPosition, currentAddress, markers];
+  List<Object?> get props => [
+        currentPosition, currentAddress,
+        // markers,
+      ];
 }
 
 // State after a destination has been selected and a route is displayed
 class HomeRouteReady extends HomeState {
+  final LatLng pickupPosition;
   final String pickupAddress;
   final String destinationAddress;
   final Set<Marker> markers;
   final Set<Polyline> polylines;
 
   const HomeRouteReady({
+    required this.pickupPosition,
     required this.pickupAddress,
     required this.destinationAddress,
     required this.markers,
@@ -47,7 +52,7 @@ class HomeRouteReady extends HomeState {
 
   @override
   List<Object?> get props =>
-      [pickupAddress, destinationAddress, markers, polylines];
+      [pickupPosition, pickupAddress, destinationAddress, markers, polylines];
 }
 
 // State for handling any errors
