@@ -79,8 +79,7 @@ class HomeCubit extends Cubit<HomeState> {
               icon: _pickupIcon!,
             );
 
-            // Don't animate camera if a route is not active, let the user pan freely.
-            // _mapController?.animateCamera(CameraUpdate.newLatLng(newLatLng));
+            _mapController?.animateCamera(CameraUpdate.newLatLng(newLatLng));
 
             emit(HomeMapReady(
               currentPosition: newLatLng,
@@ -88,7 +87,6 @@ class HomeCubit extends Cubit<HomeState> {
               markers: {updatedMarker},
             ));
           } else if (currentState is HomeRouteReady) {
-            // --- THE FIX IS HERE ---
             // If a route is active, recalculate the polyline with the new position.
 
             // 1. Get the original destination from the state
@@ -118,7 +116,9 @@ class HomeCubit extends Cubit<HomeState> {
             // 4. Emit the new state with the updated route and markers
             emit(HomeRouteReady(
               pickupPosition: newLatLng,
-              pickupAddress: await _getAddressFromLatLng(newLatLng),
+              // --- THE FIX IS HERE ---
+              // Keep the original pickup address constant
+              pickupAddress: currentState.pickupAddress,
               destinationAddress: currentState.destinationAddress,
               // Keep the original destination marker
               markers: {
