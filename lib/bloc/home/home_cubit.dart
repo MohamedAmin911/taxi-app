@@ -1,20 +1,22 @@
 import 'dart:ui' as ui;
-
 import 'package:dio/dio.dart';
-import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:geocoding/geocoding.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:taxi_app/bloc/home/home_states.dart';
 import 'package:taxi_app/common/extensions.dart';
+import 'package:taxi_app/common/images.dart';
 
 class HomeCubit extends Cubit<HomeState> {
   HomeCubit() : super(HomeInitial());
   final Dio _dio = Dio();
   GoogleMapController? _mapController;
   Position? _currentUserPosition;
-
+  // Store loaded icons to avoid reloading them constantly
+  BitmapDescriptor? _pickupIcon;
+  BitmapDescriptor? _destinationIcon;
   void setMapController(GoogleMapController controller) {
     _mapController = controller;
   }
@@ -22,28 +24,26 @@ class HomeCubit extends Cubit<HomeState> {
   Future<void> loadCurrentUserLocation() async {
     try {
       emit(HomeLoading());
+      // Load the custom marker icons from assets
+      _pickupIcon ??= await _bitmapDescriptorFromAsset(KImage.homeIcon, 90);
+      _destinationIcon ??=
+          await _bitmapDescriptorFromAsset(KImage.destinationIcon, 100);
       _currentUserPosition = await _determinePosition();
       final userLatLng = LatLng(
           _currentUserPosition!.latitude, _currentUserPosition!.longitude);
       final address = await _getAddressFromLatLng(userLatLng);
 
-      // final BitmapDescriptor pickupIcon = await _bitmapDescriptorFromIconData(
-      //   Icons.circle,
-      //   KColor.primary,
-      //   80, // Size of the icon
-      // );
-
-      // final pickupMarker = Marker(
-      //   markerId: const MarkerId('currentLocation'),
-      //   position: userLatLng,
-      //   icon: pickupIcon,
-      // );
+      final pickupMarker = Marker(
+        markerId: const MarkerId('currentLocation'),
+        position: userLatLng,
+        icon: _pickupIcon!,
+      );
       _mapController?.animateCamera(CameraUpdate.newLatLngZoom(userLatLng, 15));
 
       emit(HomeMapReady(
         currentPosition: userLatLng,
         currentAddress: address,
-        // markers: {pickupMarker},
+        markers: {pickupMarker},
       ));
     } catch (e) {
       emit(HomeError(message: "Failed to get location: ${e.toString()}"));
@@ -86,19 +86,15 @@ class HomeCubit extends Cubit<HomeState> {
         points: polylinePoints,
         width: 5,
       );
-      // final BitmapDescriptor pickupIcon =
-      //     await _bitmapDescriptorFromIconData(Icons.circle, KColor.primary, 80);
-      final BitmapDescriptor destIcon = await _bitmapDescriptorFromIconData(
-          Icons.location_on, KColor.primary, 120);
 
-      // final pickupMarker = Marker(
-      //     markerId: const MarkerId('pickup'),
-      //     position: pickupLatLng,
-      //     icon: pickupIcon);
+      final pickupMarker = Marker(
+          markerId: const MarkerId('pickup'),
+          position: pickupLatLng,
+          icon: _pickupIcon!);
       final destMarker = Marker(
           markerId: const MarkerId('destination'),
           position: destination,
-          icon: destIcon);
+          icon: _destinationIcon!);
 
       _mapController?.animateCamera(
         CameraUpdate.newLatLngBounds(
@@ -112,7 +108,7 @@ class HomeCubit extends Cubit<HomeState> {
         pickupAddress: pickupAddress,
         destinationAddress: destinationAddress,
         markers: {
-          // pickupMarker,
+          pickupMarker,
           destMarker,
         },
         polylines: {routePolyline},
@@ -122,34 +118,16 @@ class HomeCubit extends Cubit<HomeState> {
     }
   }
 
-// --- NEW HELPER FUNCTION TO CREATE MARKERS FROM ICONS ---
-  Future<BitmapDescriptor> _bitmapDescriptorFromIconData(
-      IconData iconData, Color color, double size) async {
-    final ui.PictureRecorder pictureRecorder = ui.PictureRecorder();
-    final Canvas canvas = Canvas(pictureRecorder);
-    // final Paint paint = Paint()..color = color;
-    final TextPainter textPainter =
-        TextPainter(textDirection: TextDirection.ltr);
-    final iconStr = String.fromCharCode(iconData.codePoint);
-
-    textPainter.text = TextSpan(
-      text: iconStr,
-      style: TextStyle(
-        letterSpacing: 0.0,
-        fontSize: size,
-        fontFamily: iconData.fontFamily,
-        color: color,
-      ),
-    );
-    textPainter.layout();
-    textPainter.paint(canvas, const Offset(0.0, 0.0));
-
-    final picture = pictureRecorder.endRecording();
-    final image = await picture.toImage(
-        textPainter.width.toInt(), textPainter.height.toInt());
-    final bytes = await image.toByteData(format: ui.ImageByteFormat.png);
-
-    return BitmapDescriptor.fromBytes(bytes!.buffer.asUint8List());
+  // --- NEW HELPER FUNCTION TO CREATE MARKERS FROM IMAGE ASSETS ---
+  Future<BitmapDescriptor> _bitmapDescriptorFromAsset(
+      String assetName, int width) async {
+    final ByteData data = await rootBundle.load(assetName);
+    final ui.Codec codec = await ui
+        .instantiateImageCodec(data.buffer.asUint8List(), targetWidth: width);
+    final ui.FrameInfo fi = await codec.getNextFrame();
+    final ByteData? byteData =
+        await fi.image.toByteData(format: ui.ImageByteFormat.png);
+    return BitmapDescriptor.fromBytes(byteData!.buffer.asUint8List());
   }
 
   // --- NEW FUNCTION TO GET ROUTE FROM OSRM ---

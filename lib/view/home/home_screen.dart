@@ -6,6 +6,7 @@ import 'package:taxi_app/bloc/home/home_cubit.dart';
 import 'package:taxi_app/bloc/home/home_states.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:taxi_app/common/extensions.dart';
+import 'package:taxi_app/common/images.dart';
 import 'package:taxi_app/common/text_style.dart';
 import 'package:taxi_app/common_widgets/rounded_button.dart';
 import 'package:taxi_app/view/home/destination_search_screen.dart';
@@ -45,7 +46,10 @@ class HomeScreen extends StatelessWidget {
 
                     // --- Loading or Error UI ---
                     if (state is HomeLoading)
-                      const Center(child: CircularProgressIndicator()),
+                      Center(
+                          child: CircularProgressIndicator(
+                        color: KColor.primary,
+                      )),
                     if (state is HomeError) Center(child: Text(state.message)),
 
                     // --- Top UI (Menu button) ---
@@ -69,7 +73,7 @@ class HomeScreen extends StatelessWidget {
     Set<Polyline> polylines = {};
 
     if (state is HomeMapReady) {
-      // markers = state.markers;
+      markers = state.markers;
     } else if (state is HomeRouteReady) {
       markers = state.markers;
       polylines = state.polylines;
@@ -85,7 +89,7 @@ class HomeScreen extends StatelessWidget {
           context.read<HomeCubit>().setMapController(controller),
       markers: markers,
       polylines: polylines,
-      myLocationEnabled: true,
+      myLocationEnabled: false,
       myLocationButtonEnabled: false,
     );
   }
@@ -132,8 +136,13 @@ class HomeScreen extends StatelessWidget {
                           borderRadius: BorderRadius.circular(22.r),
                         ),
                       )),
-                      Icon(Icons.location_on,
-                          color: KColor.primary, size: 30.sp),
+                      SizedBox(height: 1.h),
+                      Image.asset(
+                        KImage.destinationIcon,
+                        width: 20.w,
+                      ),
+                      // Icon(Icons.location_on,
+                      //     color: KColor.primary, size: 30.sp),
                     ],
                   ),
                 ),
@@ -204,8 +213,13 @@ class HomeScreen extends StatelessWidget {
                           Expanded(
                               child:
                                   Container(width: 1.w, color: KColor.primary)),
-                          Icon(Icons.location_on,
-                              color: KColor.primary, size: 30.sp),
+                          SizedBox(height: 1.h),
+                          Image.asset(
+                            KImage.destinationIcon,
+                            width: 20.w,
+                          ),
+                          // Icon(Icons.location_on,
+                          //     color: KColor.primary, size: 30.sp),
                         ],
                       ),
                     ),
@@ -290,14 +304,17 @@ class HomeScreen extends StatelessWidget {
         padding: const EdgeInsets.all(16.0),
         child: Container(
           decoration: BoxDecoration(
-            color: KColor.primary,
+            color: KColor.bg,
             shape: BoxShape.circle,
             boxShadow: const [
               BoxShadow(color: Colors.black26, blurRadius: 5, spreadRadius: 1)
             ],
           ),
           child: IconButton(
-            icon: const Icon(Icons.menu),
+            icon: Icon(
+              Icons.menu,
+              color: KColor.primary,
+            ),
             onPressed: () => Scaffold.of(context).openDrawer(),
           ),
         ),

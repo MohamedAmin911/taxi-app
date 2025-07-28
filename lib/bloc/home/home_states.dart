@@ -19,18 +19,19 @@ class HomeLoading extends HomeState {}
 class HomeMapReady extends HomeState {
   final LatLng currentPosition;
   final String currentAddress;
-  // final Set<Marker> markers;
+  final Set<Marker> markers;
 
   const HomeMapReady({
     required this.currentPosition,
     required this.currentAddress,
-    // required this.markers,
+    required this.markers,
   });
 
   @override
   List<Object?> get props => [
-        currentPosition, currentAddress,
-        // markers,
+        currentPosition,
+        currentAddress,
+        markers,
       ];
 }
 

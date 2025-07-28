@@ -1,8 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:google_maps_webservice/places.dart';
 
 import 'package:taxi_app/common/api_keys.dart';
+import 'package:taxi_app/common/extensions.dart';
+import 'package:taxi_app/common/images.dart';
+import 'package:taxi_app/common/text_style.dart';
+import 'package:taxi_app/common_widgets/txt_field_1.dart';
 import 'package:uuid/uuid.dart';
 
 class DestinationSearchScreen extends StatefulWidget {
@@ -100,20 +105,43 @@ class _DestinationSearchScreenState extends State<DestinationSearchScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("Enter Destination")),
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        leading: IconButton(
+          onPressed: context.pop,
+          icon: Icon(
+            Icons.arrow_back_ios,
+            color: KColor.primaryText,
+          ),
+        ),
+      ),
       body: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          SizedBox(height: 22.h),
+          // Title
           Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: TextField(
-              controller: _searchController,
-              onChanged: _onSearchChanged,
-              autofocus: true,
-              decoration: const InputDecoration(
-                hintText: "Search for a location...",
-                border: OutlineInputBorder(),
-                prefixIcon: Icon(Icons.search),
+            padding: EdgeInsets.symmetric(horizontal: 24.w),
+            child: Text(
+              "Search for a destination",
+              style: appStyle(
+                size: 25.sp,
+                color: KColor.primaryText,
+                fontWeight: FontWeight.w800,
               ),
+            ),
+          ),
+          Padding(
+            padding: EdgeInsets.only(left: 16.w, right: 16.w, top: 40.h),
+            child: CustomTxtField1(
+              onChanged: _onSearchChanged,
+              controller: _searchController,
+              hintText: "Search for a location...",
+              obscureText: false,
+              keyboardType: TextInputType.text,
+              errorText: "Please enter a valid location",
+              isObscure: false,
             ),
           ),
           Expanded(
@@ -121,17 +149,36 @@ class _DestinationSearchScreenState extends State<DestinationSearchScreen> {
               itemCount: _predictions.length,
               itemBuilder: (context, index) {
                 final prediction = _predictions[index];
-                return ListTile(
-                    leading: const Icon(Icons.location_on_outlined),
-                    title:
-                        Text(prediction.structuredFormatting?.mainText ?? ''),
-                    subtitle: Text(
-                        prediction.structuredFormatting?.secondaryText ?? ''),
-                    onTap: () {
-                      if (prediction.placeId != null) {
-                        _onPlaceSelected(prediction.placeId!);
-                      }
-                    });
+                return Padding(
+                  padding:
+                      EdgeInsets.symmetric(horizontal: 16.w, vertical: 5.h),
+                  child: Material(
+                    elevation: 0.5,
+                    borderRadius: BorderRadius.circular(22.r),
+                    child: ListTile(
+                        titleTextStyle: appStyle(
+                            size: 16.sp,
+                            color: KColor.primaryText,
+                            fontWeight: FontWeight.w500),
+                        tileColor: KColor.lightWhite,
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(22.r)),
+                        leading: Image.asset(
+                          KImage.destinationIcon,
+                          width: 30.w,
+                        ),
+                        title: Text(
+                            prediction.structuredFormatting?.mainText ?? ''),
+                        subtitle: Text(
+                            prediction.structuredFormatting?.secondaryText ??
+                                ''),
+                        onTap: () {
+                          if (prediction.placeId != null) {
+                            _onPlaceSelected(prediction.placeId!);
+                          }
+                        }),
+                  ),
+                );
               },
             ),
           ),

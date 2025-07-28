@@ -13,6 +13,7 @@ class CustomTxtField1 extends StatelessWidget {
     required this.keyboardType,
     required this.errorText,
     required this.isObscure,
+    this.onChanged,
   });
 
   final TextEditingController controller;
@@ -21,12 +22,14 @@ class CustomTxtField1 extends StatelessWidget {
   final String errorText;
   bool obscureText;
   final TextInputType keyboardType;
+  final Function(String)? onChanged;
 
   @override
   Widget build(BuildContext context) {
     return SizedBox(
       height: 78.h,
       child: TextFormField(
+        onChanged: onChanged,
         controller: controller,
         cursorColor: KColor.primary,
         cursorHeight: 17.h,
