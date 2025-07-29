@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:taxi_app/bloc/auth/auth_cubit.dart';
+import 'package:taxi_app/bloc/auth/auth_states.dart';
 import 'package:taxi_app/bloc/home/home_cubit.dart';
 import 'package:taxi_app/bloc/home/home_states.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -9,6 +10,7 @@ import 'package:taxi_app/common/extensions.dart';
 import 'package:taxi_app/common/images.dart';
 import 'package:taxi_app/common/text_style.dart';
 import 'package:taxi_app/common_widgets/rounded_button.dart';
+import 'package:taxi_app/view/auth/auth_gate.dart';
 import 'package:taxi_app/view/home/destination_search_screen.dart';
 
 class HomeScreen extends StatelessWidget {
@@ -33,35 +35,47 @@ class HomeScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return BlocProvider(
       create: (context) => HomeCubit()..loadCurrentUserLocation(),
-      child: Scaffold(
-        drawer: _buildAppDrawer(),
-        body: Builder(
-          builder: (context) {
-            return BlocBuilder<HomeCubit, HomeState>(
-              builder: (context, state) {
-                return Stack(
-                  children: [
-                    // --- Google Map ---
-                    _buildGoogleMap(context, state),
-
-                    // --- Loading or Error UI ---
-                    if (state is HomeLoading)
-                      Center(
-                          child: CircularProgressIndicator(
-                        color: KColor.primary,
-                      )),
-                    if (state is HomeError) Center(child: Text(state.message)),
-
-                    // --- Top UI (Menu button) ---
-                    _buildTopUI(context),
-
-                    // --- Bottom Panel ---
-                    _buildBottomPanel(context, state),
-                  ],
-                );
-              },
+      child: BlocListener<AuthCubit, AuthState>(
+        listener: (context, state) {
+          if (state is AuthLoggedOut) {
+            // When the user is logged out, go back to the AuthGate
+            Navigator.of(context).pushAndRemoveUntil(
+              MaterialPageRoute(builder: (_) => const AuthGate()),
+              (route) => false,
             );
-          },
+          }
+        },
+        child: Scaffold(
+          drawer: _buildAppDrawer(),
+          body: Builder(
+            builder: (context) {
+              return BlocBuilder<HomeCubit, HomeState>(
+                builder: (context, state) {
+                  return Stack(
+                    children: [
+                      // --- Google Map ---
+                      _buildGoogleMap(context, state),
+
+                      // --- Loading or Error UI ---
+                      if (state is HomeLoading)
+                        Center(
+                            child: CircularProgressIndicator(
+                          color: KColor.primary,
+                        )),
+                      if (state is HomeError)
+                        Center(child: Text(state.message)),
+
+                      // --- Top UI (Menu button) ---
+                      _buildTopUI(context),
+
+                      // --- Bottom Panel ---
+                      _buildBottomPanel(context, state),
+                    ],
+                  );
+                },
+              );
+            },
+          ),
         ),
       ),
     );

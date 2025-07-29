@@ -59,7 +59,7 @@ class HomeCubit extends Cubit<HomeState> {
       // 2. Start listening for continuous location updates
       const LocationSettings locationSettings = LocationSettings(
         accuracy: LocationAccuracy.high,
-        distanceFilter: 10, // Update every 10 meters
+        distanceFilter: 5,
       );
 
       _positionStreamSubscription =
@@ -79,7 +79,8 @@ class HomeCubit extends Cubit<HomeState> {
               icon: _pickupIcon!,
             );
 
-            _mapController?.animateCamera(CameraUpdate.newLatLng(newLatLng));
+            _mapController
+                ?.animateCamera(CameraUpdate.newLatLngZoom(newLatLng, 16));
 
             emit(HomeMapReady(
               currentPosition: newLatLng,

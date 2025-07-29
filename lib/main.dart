@@ -9,8 +9,8 @@ import 'package:taxi_app/bloc/customer/customer_cubit.dart';
 import 'package:taxi_app/bloc/payment/payment_method_cubit.dart';
 import 'package:taxi_app/common/api_keys.dart';
 import 'package:taxi_app/common/extensions.dart';
-import 'package:taxi_app/view/auth/auth_gate.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:taxi_app/view/auth/splash_view.dart';
 import 'firebase_options.dart';
 
 void main() async {
@@ -53,7 +53,8 @@ class MyApp extends StatelessWidget {
                 colorScheme: ColorScheme.fromSeed(seedColor: KColor.primary),
                 useMaterial3: false,
               ),
-              home: const AuthGate(),
+              home: const SplashScreen(),
+              // const AuthGate(),
             );
           }),
     );
