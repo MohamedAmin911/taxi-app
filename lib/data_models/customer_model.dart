@@ -12,6 +12,7 @@ class CustomerModel {
   final int totalRides;
   final String? fcmToken;
   final String? stripeCustomerId;
+  final List<Map<String, dynamic>>? searchHistory;
   CustomerModel({
     required this.uid,
     required this.phoneNumber,
@@ -24,6 +25,7 @@ class CustomerModel {
     this.totalRides = 0,
     this.fcmToken,
     this.stripeCustomerId,
+    this.searchHistory,
   });
 
   Map<String, dynamic> toMap() {
@@ -39,6 +41,7 @@ class CustomerModel {
       'totalRides': totalRides,
       'fcmToken': fcmToken,
       'stripeCustomerId': stripeCustomerId,
+      'searchHistory': searchHistory,
     };
   }
 
@@ -55,6 +58,9 @@ class CustomerModel {
       totalRides: map['totalRides'] as int? ?? 0,
       fcmToken: map['fcmToken'],
       stripeCustomerId: map['stripeCustomerId'],
+      searchHistory: map['searchHistory'] != null
+          ? List<Map<String, dynamic>>.from(map['searchHistory'])
+          : null,
     );
   }
 }

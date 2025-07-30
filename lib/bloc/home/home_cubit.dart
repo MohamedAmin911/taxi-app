@@ -117,7 +117,7 @@ class HomeCubit extends Cubit<HomeState> {
             // 4. Emit the new state with the updated route and markers
             emit(HomeRouteReady(
               pickupPosition: newLatLng,
-              // --- THE FIX IS HERE ---
+
               // Keep the original pickup address constant
               pickupAddress: currentState.pickupAddress,
               destinationAddress: currentState.destinationAddress,

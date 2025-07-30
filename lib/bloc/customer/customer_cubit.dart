@@ -143,6 +143,38 @@ class CustomerCubit extends Cubit<CustomerState> {
     }
   }
 
+  Future<void> addSearchToHistory(
+      String uid, Map<String, dynamic> newSearch) async {
+    final docRef = _db.collection('customers').doc(uid);
+    try {
+      final doc = await docRef.get();
+      if (doc.exists) {
+        final customer = CustomerModel.fromMap(doc.data()!);
+        List<Map<String, dynamic>> history = customer.searchHistory ?? [];
+
+        // Add a timestamp to the new search entry
+        newSearch['timestamp'] = Timestamp.now();
+
+        // Prevent duplicates by removing any existing entry with the same address
+        history.removeWhere((item) => item['address'] == newSearch['address']);
+
+        // Add the new search to the beginning of the list
+        history.insert(0, newSearch);
+
+        // Keep only the last 5 searches
+        if (history.length > 5) {
+          history = history.sublist(0, 5);
+        }
+
+        // Update the document in Firestore
+        await docRef.update({'searchHistory': history});
+      }
+    } catch (e) {
+      print("Error adding to search history: $e");
+      // You could emit an error state here if you want to notify the user
+    }
+  }
+
   @override
   Future<void> close() {
     _customerSubscription?.cancel();
